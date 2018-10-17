@@ -111,7 +111,7 @@ public class RITika {
 
         }
         // Prints the number of tokens in the document
-        System.out.println(frecuencies_ordered.size());
+        System.out.println("Number of tokens of the document: " + frecuencies_ordered.size());
 
         //Override the method compare to compare the first value of our Pair
         Collections.sort(frecuencies_ordered, new Comparator<Pair>() {
@@ -128,14 +128,14 @@ public class RITika {
     // Saves each document to result file
     private void save_results_to_file(File f) throws FileNotFoundException, IOException {
         File out;          
-        out = new File("results_" + f.getName() + ".dat");
+        out = new File("results_" + f.getName() + ".csv");
         
         FileWriter fw = new FileWriter(out);
         BufferedWriter buff_writer = new BufferedWriter(fw);
         // Writes the rank of a token and the times it appeared in the document
         // Counter starts at 1 and gets paired with the first item of the arraylist
         for(int i=1; i<frecuencies_ordered.size(); i++){
-            buff_writer.write(i + "  " + frecuencies_ordered.get(i-1).getL()); // 
+            buff_writer.write(i  + "," + frecuencies_ordered.get(i-1).getL() ); // Writes rank and occurences
             buff_writer.newLine();
         }
         buff_writer.close();
@@ -192,6 +192,6 @@ public class RITika {
         Tika tika = new Tika();
         RITika example = new RITika();
         // Should be changed to the appropiate directory, may be changed in the past to make it an input
-        example.run("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\Prueba\\src\\ritika\\files");
+        example.run("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P1\\src\\ritika\\files");
     }
 }
