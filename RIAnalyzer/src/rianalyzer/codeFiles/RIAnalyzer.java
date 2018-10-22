@@ -157,7 +157,7 @@ public class RIAnalyzer {
     public static void main(String[] args) throws IOException, TikaException, SAXException {
         RIAnalyzer example = new RIAnalyzer();
         // Should be changed to the appropiate directory, may be changed in the future to make it an input
-        example.run("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\RIAnalyzer\\src\\rianalyzer\\codefiles");
+        example.run("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\RIAnalyzer\\src\\rianalyzer");
         
     }
     
