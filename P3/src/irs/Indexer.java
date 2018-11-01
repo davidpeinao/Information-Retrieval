@@ -58,11 +58,10 @@ public class Indexer {
      
     private void indexDoc(String cadena, File file) throws FileNotFoundException, ParseException{
         Document doc = new Document();
-        
-        ArrayList<String> fields = this.getFields(cadena);
-        System.out.println(fields.toString());
-        
+
         if (file.getName() == "Answers.csv"){
+            ArrayList<String> fields = this.getFields(cadena, 6);
+            
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
             doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));
@@ -79,8 +78,15 @@ public class Indexer {
 
             doc.add(new StringField("isacceptedanswer", fields.get(5), Field.Store.YES));
             doc.add(new TextField("body", fields.get(6) , Field.Store.NO));
+            
+            System.out.println(fields.toString());
+            
+            
         }
+        
         if (file.getName() == "Questions.csv"){
+            ArrayList<String> fields = this.getFields(cadena, 4);
+            
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
             doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));
@@ -90,20 +96,24 @@ public class Indexer {
             doc.add (new LongPoint("date", date.getTime()));
             doc.add(new StoredField("date", fields.get(2)));
             
-            doc.add(new IntPoint("score", Integer.parseInt(fields.get(4))));
-            doc.add(new StoredField("score", fields.get(4)));
+            doc.add(new IntPoint("score", Integer.parseInt(fields.get(3))));
+            doc.add(new StoredField("score", fields.get(3)));
             
-            doc.add(new TextField("title", fields.get(6) , Field.Store.NO));
-            doc.add(new TextField("body", fields.get(6) , Field.Store.NO));          
+            doc.add(new TextField("title", fields.get(4) , Field.Store.NO));
+            doc.add(new TextField("body", fields.get(4) , Field.Store.NO));          
         }
+        
         if (file.getName() == "Tags.csv"){
+            ArrayList<String> fields = this.getFields(cadena, 1);
+            
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
-            doc.add(new TextField("tags", fields.get(6) , Field.Store.NO));
+            doc.add(new TextField("tags", fields.get(1) , Field.Store.NO));
         }
+         
     }
     
-    private ArrayList getFields(String cadena) {
+    private ArrayList getFields(String cadena, int nfields) {
         ArrayList<String> fields = new ArrayList<>();
         int i=0, j=0;
         while(i < cadena.length()){
@@ -112,7 +122,7 @@ public class Indexer {
                     fields.add(cadena.substring(j, i));
                     i += 2;
                 }else{
-                if(fields.size() != 6) {
+                if(fields.size() != nfields) {
                     j = i;
                     while (!String.valueOf(cadena.charAt(i)).equals(",")) {
                         i++;
