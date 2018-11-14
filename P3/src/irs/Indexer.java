@@ -6,13 +6,11 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.HashMap;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
@@ -20,13 +18,42 @@ import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.index.IndexWriter;
+import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.store.FSDirectory;
+import org.jsoup.Jsoup;
 
 public class Indexer {
 
 
-    static HashMap<String, Analyzer> analyzers = new HashMap<>();
-    static PerFieldAnalyzerWrapper analyzer = null;
-
+//    
+//    
+//    
+//    
+//    añadir libreria jsoup
+//    
+//    
+//    
+//    
+    
+    FSDirectory dir;
+    IndexWriterConfig config;
+    IndexWriter writer;
+    
+    public Indexer() throws IOException {
+        this.dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        this.config = new IndexWriterConfig();
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+        
+        writer = new IndexWriter(dir, config);
+    }
+    
+    
+    
+    private void closeIndex() throws IOException{
+        writer.commit();
+        writer.close();
+    }
     
     private void addFile(File file) throws IOException, FileNotFoundException, ParseException {
         if (!file.exists()) {
@@ -35,41 +62,60 @@ public class Indexer {
         if (file.isDirectory()) {
             for (File f : file.listFiles()) {
                 addFile(f);
+                System.out.println("file: " + f);
             }
         } else {
-            
-            int i = 0;
-            
-            
-            String cadena;
+            String cadena, answer = "";
             Boolean categories = true;
             FileReader fReader = new FileReader(file.toString());
             BufferedReader b = new BufferedReader(fReader);
-            
-            // hace esto solo con 4 lineas para probar, cuando todo este bien se quita
-            while((cadena = b.readLine())!=null && i < 4) {
-                if(categories == false)
-                    this.indexDoc(cadena, file);
-                else
+            int i = 0;
+            while(((cadena = b.readLine())!=null) && (i < 50)) {
+                i++;
+                if (!"\"".equals(cadena) && categories == false){
+                    answer += cadena;
+                    continue;
+                }
+                
+                if(categories == false){
+                    System.out.println(answer);
+                    this.indexDoc(answer, file);
+                    answer = "";
+                }else{
                     categories = false;
+                    answer = "";
+                }
             }
-        }
+        }        
     }
      
-    private void indexDoc(String cadena, File file) throws FileNotFoundException, ParseException{
+    private void indexDoc(String cadena, File file) throws FileNotFoundException, ParseException, IOException{
         Document doc = new Document();
 
-        if (file.getName() == "Answers.csv"){
+        if ("Answers.csv".equals(file.getName())){
             ArrayList<String> fields = this.getFields(cadena, 6);
-            
+            //System.out.println(fields);
+
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
-            doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));
+            if (fields.get(1).contains("NA")){
+                doc.add(new IntPoint("owneruserid", 0));
+                doc.add(new StoredField("owneruserid", 0));
+            }else{                
+            doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));         
             doc.add(new StoredField("owneruserid", fields.get(1)));
-
-            Date date = new SimpleDateFormat("yyyy−MM−dd 'T' HH:mm:ss 'Z'" ).parse(fields.get(2));
-            doc.add (new LongPoint("date", date.getTime()));
-            doc.add(new StoredField("date", fields.get(2)));
+            }
+            
+            try{
+                Date date = new SimpleDateFormat("yyyy−MM−dd 'T' HH:mm:ss 'Z'" ).parse(fields.get(2));
+                doc.add (new LongPoint("date", date.getTime()));
+                doc.add(new StoredField("date", fields.get(2)));
+            } catch(ParseException e){
+                Date date = new Date(0);
+                doc.add (new LongPoint("date", date.getTime()));
+                
+                doc.add(new StoredField("date", fields.get(2)));
+            }         
 
             doc.add(new IntPoint("parentid", Integer.parseInt(fields.get(3))));
             doc.add(new StoredField("parentid", fields.get(3)));
@@ -77,38 +123,61 @@ public class Indexer {
             doc.add(new StoredField("score", fields.get(4)));
 
             doc.add(new StringField("isacceptedanswer", fields.get(5), Field.Store.YES));
-            doc.add(new TextField("body", fields.get(6) , Field.Store.NO));
             
-            System.out.println(fields.toString());
-            
+            String respuesta = fields.get(6);
+            org.jsoup.nodes.Document jsoup = Jsoup.parse(respuesta);
+            //doc.add(new TextField("body", fields.get(6) , Field.Store.NO));
+            doc.add(new TextField("body", jsoup.body().text() , Field.Store.NO));
+                       
+            writer.addDocument(doc);
             
         }
         
-        if (file.getName() == "Questions.csv"){
-            ArrayList<String> fields = this.getFields(cadena, 4);
+        if ("Questions.csv".equals(file.getName())){
+            ArrayList<String> fields = this.getFields(cadena, 5);
             
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
-            doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));
+            
+            if (fields.get(1).contains("NA")){
+                doc.add(new IntPoint("owneruserid", 0));
+                doc.add(new StoredField("owneruserid", 0));
+            }else{ 
+            doc.add(new IntPoint("owneruserid", Integer.parseInt(fields.get(1))));         
             doc.add(new StoredField("owneruserid", fields.get(1)));
+            }
 
-            Date date = new SimpleDateFormat("yyyy−MM−dd 'T' HH:mm:ss 'Z'" ).parse(fields.get(2));
-            doc.add (new LongPoint("date", date.getTime()));
-            doc.add(new StoredField("date", fields.get(2)));
+            try{
+                Date date = new SimpleDateFormat("yyyy−MM−dd 'T' HH:mm:ss 'Z'" ).parse(fields.get(2));
+                doc.add (new LongPoint("date", date.getTime()));
+                doc.add(new StoredField("date", fields.get(2)));
+            } catch(ParseException e){
+                Date date = new Date(0);
+                doc.add (new LongPoint("date", date.getTime()));
+                doc.add(new StoredField("date", fields.get(2)));
+            }
             
             doc.add(new IntPoint("score", Integer.parseInt(fields.get(3))));
             doc.add(new StoredField("score", fields.get(3)));
             
             doc.add(new TextField("title", fields.get(4) , Field.Store.NO));
-            doc.add(new TextField("body", fields.get(4) , Field.Store.NO));          
+            
+            String respuesta = fields.get(5);
+            org.jsoup.nodes.Document jsoup = Jsoup.parse(respuesta);
+            //doc.add(new TextField("body", fields.get(5) , Field.Store.NO));
+            doc.add(new TextField("body", jsoup.body().text() , Field.Store.NO));   
+            
+            writer.addDocument(doc);
         }
         
-        if (file.getName() == "Tags.csv"){
+        if ("Tags.csv".equals(file.getName())){
             ArrayList<String> fields = this.getFields(cadena, 1);
             
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
             doc.add(new TextField("tags", fields.get(1) , Field.Store.NO));
+            
+            writer.addDocument(doc);
         }
          
     }
@@ -116,12 +185,12 @@ public class Indexer {
     private ArrayList getFields(String cadena, int nfields) {
         ArrayList<String> fields = new ArrayList<>();
         int i=0, j=0;
-        while(i < cadena.length()){
-                        
-                if(String.valueOf(cadena.charAt(i+1)).equals(",")) {
-                    fields.add(cadena.substring(j, i));
-                    i += 2;
-                }else{
+        
+        while(i < cadena.length()){                     
+            if(String.valueOf(cadena.charAt(i)).equals(",")) {
+                fields.add(cadena.substring(j, i));
+                i += 2;                  
+            }else{
                 if(fields.size() != nfields) {
                     j = i;
                     while (!String.valueOf(cadena.charAt(i)).equals(",")) {
@@ -141,9 +210,8 @@ public class Indexer {
 
             }
         }
-
+        
         return fields;
-
     }
     
     
@@ -151,6 +219,8 @@ public class Indexer {
         Indexer instance = new Indexer();
         File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
         instance.addFile(f);
+        
+        instance.closeIndex();
     }
 
     
