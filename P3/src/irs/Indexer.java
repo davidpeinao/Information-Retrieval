@@ -11,6 +11,13 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+import org.apache.lucene.analysis.Analyzer;
+import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
+import org.apache.lucene.analysis.en.EnglishAnalyzer;
+import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
+import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.Field;
 import org.apache.lucene.document.IntPoint;
@@ -20,37 +27,27 @@ import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.search.similarities.ClassicSimilarity;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Element;
 
 public class Indexer {
 
-
-//    
-//    
-//    
-//    
-//    añadir libreria jsoup
-//    
-//    
-//    
-//    
+    private IndexWriter writer;
+    boolean create = true;
     
-    FSDirectory dir;
-    IndexWriterConfig config;
-    IndexWriter writer;
-    
-    public Indexer() throws IOException {
-        this.dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
-        this.config = new IndexWriterConfig();
+    public void configurarIndice(PerFieldAnalyzerWrapper analyzer, Similarity similarity) throws IOException{
+        IndexWriterConfig config = new IndexWriterConfig(analyzer);
+        config.setSimilarity(similarity);
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        
-        writer = new IndexWriter(dir, config);
+        //FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        writer = new IndexWriter(dir, config);   
     }
     
-    
-    
-    private void closeIndex() throws IOException{
+    public void closeIndex() throws IOException{
         writer.commit();
         writer.close();
     }
@@ -69,8 +66,9 @@ public class Indexer {
             Boolean categories = true;
             FileReader fReader = new FileReader(file.toString());
             BufferedReader b = new BufferedReader(fReader);
-            int i = 0;
-            while(((cadena = b.readLine())!=null) && (i < 50)) {
+            
+            int i=0;
+            while((cadena = b.readLine())!=null && i<200) {
                 i++;
                 if (!"\"".equals(cadena) && categories == false){
                     answer += cadena;
@@ -89,7 +87,7 @@ public class Indexer {
         }        
     }
      
-    private void indexDoc(String cadena, File file) throws FileNotFoundException, ParseException, IOException{
+    public void indexDoc(String cadena, File file) throws FileNotFoundException, ParseException, IOException{
         Document doc = new Document();
 
         if ("Answers.csv".equals(file.getName())){
@@ -126,9 +124,16 @@ public class Indexer {
             
             String respuesta = fields.get(6);
             org.jsoup.nodes.Document jsoup = Jsoup.parse(respuesta);
-            //doc.add(new TextField("body", fields.get(6) , Field.Store.NO));
-            doc.add(new TextField("body", jsoup.body().text() , Field.Store.NO));
-                       
+            doc.add(new TextField("body", fields.get(6) , Field.Store.YES));
+            //doc.add(new TextField("body", jsoup.body().text() , Field.Store.YES));
+            
+            String codeString = "";
+            for (Element e : jsoup.getAllElements()){
+                if (e.tagName().equals("code"))
+                    codeString += e.text();
+            }
+           doc.add(new TextField("code", codeString , Field.Store.YES));
+
             writer.addDocument(doc);
             
         }
@@ -160,12 +165,12 @@ public class Indexer {
             doc.add(new IntPoint("score", Integer.parseInt(fields.get(3))));
             doc.add(new StoredField("score", fields.get(3)));
             
-            doc.add(new TextField("title", fields.get(4) , Field.Store.NO));
+            doc.add(new TextField("title", fields.get(4) , Field.Store.YES));
             
             String respuesta = fields.get(5);
             org.jsoup.nodes.Document jsoup = Jsoup.parse(respuesta);
-            //doc.add(new TextField("body", fields.get(5) , Field.Store.NO));
-            doc.add(new TextField("body", jsoup.body().text() , Field.Store.NO));   
+            //doc.add(new TextField("body", fields.get(5) , Field.Store.YES));
+            doc.add(new TextField("body", jsoup.body().text() , Field.Store.YES));   
             
             writer.addDocument(doc);
         }
@@ -175,14 +180,14 @@ public class Indexer {
             
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
-            doc.add(new TextField("tags", fields.get(1) , Field.Store.NO));
+            doc.add(new TextField("tags", fields.get(1) , Field.Store.YES));
             
             writer.addDocument(doc);
         }
          
     }
     
-    private ArrayList getFields(String cadena, int nfields) {
+    public ArrayList getFields(String cadena, int nfields) {
         ArrayList<String> fields = new ArrayList<>();
         int i=0, j=0;
         
@@ -216,13 +221,22 @@ public class Indexer {
     
     
     public static void main(String[] args) throws IOException, FileNotFoundException, ParseException {
-        Indexer instance = new Indexer();
-        File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
-        instance.addFile(f);
         
-        instance.closeIndex();
+        Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
+        analyzerPerField.put("body", new EnglishAnalyzer());
+        analyzerPerField.put("code", new WhitespaceAnalyzer());
+        PerFieldAnalyzerWrapper analyzer  = new PerFieldAnalyzerWrapper(new WhitespaceAnalyzer() , analyzerPerField);
+        //BM25
+        Similarity similarity = new ClassicSimilarity();
+        Indexer indice = new Indexer();
+        
+        indice.configurarIndice(analyzer, similarity);
+  
+        //File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        File f = new File("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        indice.addFile(f);
+        
+        indice.closeIndex();
     }
 
-    
-    
 }
