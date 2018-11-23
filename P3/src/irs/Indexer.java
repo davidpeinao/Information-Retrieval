@@ -68,7 +68,7 @@ public class Indexer {
             BufferedReader b = new BufferedReader(fReader);
             
             int i=0;
-            while((cadena = b.readLine())!=null && i<200) {
+            while((cadena = b.readLine())!=null && i<10000) {
                 i++;
                 if (!"\"".equals(cadena) && categories == false){
                     answer += cadena;
@@ -141,6 +141,7 @@ public class Indexer {
         if ("Questions.csv".equals(file.getName())){
             ArrayList<String> fields = this.getFields(cadena, 5);
             
+            //doc.add(new StringField("id",fields.get(0),Field.Store.YES));
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
             
@@ -223,6 +224,13 @@ public class Indexer {
     public static void main(String[] args) throws IOException, FileNotFoundException, ParseException {
         
         Map<String, Analyzer> analyzerPerField = new HashMap<String, Analyzer>();
+        analyzerPerField.put("id", new WhitespaceAnalyzer());
+        analyzerPerField.put("owneruserid", new WhitespaceAnalyzer());
+        analyzerPerField.put("parentid", new WhitespaceAnalyzer());
+        analyzerPerField.put("date", new WhitespaceAnalyzer());
+        analyzerPerField.put("score", new WhitespaceAnalyzer());
+        analyzerPerField.put("isacceptedanswer", new WhitespaceAnalyzer());
+        analyzerPerField.put("tags", new WhitespaceAnalyzer());
         analyzerPerField.put("body", new EnglishAnalyzer());
         analyzerPerField.put("code", new WhitespaceAnalyzer());
         PerFieldAnalyzerWrapper analyzer  = new PerFieldAnalyzerWrapper(new WhitespaceAnalyzer() , analyzerPerField);
