@@ -42,8 +42,8 @@ public class Indexer {
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         config.setSimilarity(similarity);
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
-        //FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
-        FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        //FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
         writer = new IndexWriter(dir, config);   
     }
     
@@ -240,8 +240,8 @@ public class Indexer {
         
         indice.configurarIndice(analyzer, similarity);
   
-        //File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
-        File f = new File("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        //File f = new File("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
         indice.addFile(f);
         
         indice.closeIndex();

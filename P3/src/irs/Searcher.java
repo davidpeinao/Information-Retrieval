@@ -11,10 +11,14 @@ import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.QueryParser;
+import org.apache.lucene.search.BooleanClause;
+import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
+import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
@@ -22,8 +26,8 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Searcher {
     
-    //String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    //String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
     
     public String docEncontrados = "";
     
@@ -31,25 +35,44 @@ public class Searcher {
         return docEncontrados;
     }
     
-    public String indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, String campo) throws IOException{
+    public String indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, String campo, String line2, String campo2, String operation) throws IOException{
         IndexReader reader = null;
+        
         
         reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
         IndexSearcher searcher = new IndexSearcher(reader);
-
         searcher.setSimilarity(similarity);
         
-        QueryParser parser = new QueryParser(campo, analyzerPerField.get(campo));
-
-        Query query = null;
-        try{
-            query = parser.parse(line);
-        } catch ( org.apache.lucene.queryparser.classic.ParseException e){
-            System.out.println("Error en cadena consulta.");
-
+        //QueryParser parser = new QueryParser(campo, analyzerPerField.get(campo));
+        // QUE ANALYZER SE LES HA PASADO A LOS CAMPOS INTRODUCIDOS PARA LA BUSQUEDA?
+        Query query = null, query2 = null;
+        query = new TermQuery(new Term(campo, line));
+        query2 = new TermQuery(new Term(campo2, line2));
+        BooleanClause bc1 = null, bc2 = null;
+        
+        if(operation.equals("AND")){
+            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
+            bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST);
         }
-
-        TopDocs results = searcher.search(query, 10);
+        
+        if(operation.equals("OR")){
+            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
+            bc2 = new BooleanClause(query2, BooleanClause.Occur.SHOULD);
+        }
+        
+        if(operation.equals("NOT")){
+            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
+            bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST_NOT);
+        }
+        
+        BooleanQuery.Builder bqbuilder = new BooleanQuery.Builder();
+        
+        bqbuilder.add(bc1);
+        bqbuilder.add(bc2);
+        
+        BooleanQuery bq = bqbuilder.build();
+        
+        TopDocs results = searcher.search(bq, 10);
         ScoreDoc[] hits = results.scoreDocs;
 
         String encontrados = "", resultado = "";
