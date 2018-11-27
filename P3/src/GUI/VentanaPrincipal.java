@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.ButtonGroup;
 import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.core.WhitespaceAnalyzer;
 import org.apache.lucene.analysis.en.EnglishAnalyzer;
@@ -30,6 +31,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     //Analyzer analyzer = new EnglishAnalyzer();
     Map<String, Analyzer> analyzerPerField;
     Similarity similarity = new ClassicSimilarity();
+    ButtonGroup booleanButtons;
     /**
      * Creates new form VentanaPrincipal
      */
@@ -45,6 +47,11 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         analyzerPerField.put("body", new EnglishAnalyzer());
         analyzerPerField.put("code", new WhitespaceAnalyzer());
         initComponents();
+        buttonGroup2.add(ANDButton);
+        buttonGroup2.add(ORButton);
+        buttonGroup2.add(NOTButton);
+
+        
         
     }
 
@@ -57,6 +64,8 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
     private void initComponents() {
 
+        buttonGroup1 = new javax.swing.ButtonGroup();
+        buttonGroup2 = new javax.swing.ButtonGroup();
         BotonSalir = new javax.swing.JButton();
         LabelBuscar = new javax.swing.JLabel();
         TextFieldBuscar = new javax.swing.JTextField();
@@ -69,6 +78,9 @@ public class VentanaPrincipal extends javax.swing.JFrame {
         LabelBuscar2 = new javax.swing.JLabel();
         ComboBox2 = new javax.swing.JComboBox<>();
         TextFieldBuscar2 = new javax.swing.JTextField();
+        ANDButton = new javax.swing.JRadioButton();
+        ORButton = new javax.swing.JRadioButton();
+        NOTButton = new javax.swing.JRadioButton();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -128,20 +140,41 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
+        ANDButton.setText("AND");
+        ANDButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ANDButtonActionPerformed(evt);
+            }
+        });
+
+        ORButton.setText("OR");
+        ORButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                ORButtonActionPerformed(evt);
+            }
+        });
+
+        NOTButton.setText("NOT");
+        NOTButton.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                NOTButtonActionPerformed(evt);
+            }
+        });
+
         javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
         getContentPane().setLayout(layout);
         layout.setHorizontalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
+                .addGap(29, 29, 29)
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addComponent(jScrollPane2)
                     .addGroup(layout.createSequentialGroup()
-                        .addGap(29, 29, 29)
                         .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                             .addGroup(layout.createSequentialGroup()
                                 .addComponent(DocumentosEncontradosLabel)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(TextFieldDocumentosEncontrados, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                                .addComponent(TextFieldDocumentosEncontrados, javax.swing.GroupLayout.PREFERRED_SIZE, 105, javax.swing.GroupLayout.PREFERRED_SIZE))
                             .addGroup(layout.createSequentialGroup()
                                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING)
                                     .addGroup(layout.createSequentialGroup()
@@ -156,39 +189,47 @@ public class VentanaPrincipal extends javax.swing.JFrame {
                                         .addComponent(TextFieldBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, 215, javax.swing.GroupLayout.PREFERRED_SIZE)
                                         .addGap(18, 18, 18)
                                         .addComponent(ComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(BotonBuscar))))
-                    .addGroup(layout.createSequentialGroup()
-                        .addGap(63, 63, 63)
-                        .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 541, javax.swing.GroupLayout.PREFERRED_SIZE)))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 84, Short.MAX_VALUE)
+                                .addGap(18, 18, 18)
+                                .addComponent(ANDButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(ORButton)
+                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                                .addComponent(NOTButton)
+                                .addGap(61, 61, 61)
+                                .addComponent(BotonBuscar)))
+                        .addGap(0, 90, Short.MAX_VALUE)))
+                .addGap(18, 18, 18)
                 .addComponent(BotonSalir)
                 .addContainerGap())
         );
         layout.setVerticalGroup(
             layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
-                .addGap(23, 23, 23)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(LabelBuscar)
-                    .addComponent(TextFieldBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(ComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(LabelBuscar2)
-                    .addComponent(TextFieldBuscar2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(ComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 67, Short.MAX_VALUE)
+            .addGroup(layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(23, 23, 23)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(LabelBuscar)
+                            .addComponent(TextFieldBuscar, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(ComboBox1, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+                            .addComponent(LabelBuscar2)
+                            .addComponent(TextFieldBuscar2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(ComboBox2, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+                            .addComponent(ANDButton)
+                            .addComponent(ORButton)
+                            .addComponent(NOTButton)))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(31, 31, 31)
+                        .addComponent(BotonBuscar)))
+                .addGap(37, 37, 37)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
                     .addComponent(DocumentosEncontradosLabel)
                     .addComponent(TextFieldDocumentosEncontrados, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addGap(18, 18, 18)
-                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 299, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addGap(25, 25, 25))
-            .addGroup(layout.createSequentialGroup()
-                .addGap(35, 35, 35)
-                .addComponent(BotonBuscar)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+                .addComponent(jScrollPane2, javax.swing.GroupLayout.PREFERRED_SIZE, 454, javax.swing.GroupLayout.PREFERRED_SIZE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, 13, Short.MAX_VALUE)
                 .addComponent(BotonSalir)
                 .addContainerGap())
         );
@@ -207,7 +248,17 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private void BotonBuscarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_BotonBuscarActionPerformed
         try {
             String campo = ComboBox1.getSelectedItem().toString();
-            TextAreaResultado.setText(searcher.indexSearch(analyzerPerField, similarity, TextFieldBuscar.getText(), campo));
+            String campo2 = ComboBox2.getSelectedItem().toString();
+            
+            String boolOperation = "";
+            if(ANDButton.isSelected())
+                boolOperation += "AND";
+            if(ORButton.isSelected())
+                boolOperation += "OR";
+            if(NOTButton.isSelected())
+                boolOperation += "NOT";
+            
+            TextAreaResultado.setText(searcher.indexSearch(analyzerPerField, similarity, TextFieldBuscar.getText(), campo, TextFieldBuscar2.getText(), campo2, boolOperation));
             TextFieldDocumentosEncontrados.setText(searcher.getDocEncontrados());
         } catch (IOException ex) {
             Logger.getLogger(VentanaPrincipal.class.getName()).log(Level.SEVERE, null, ex);
@@ -229,6 +280,18 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private void TextFieldBuscar2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_TextFieldBuscar2ActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_TextFieldBuscar2ActionPerformed
+
+    private void ANDButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ANDButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ANDButtonActionPerformed
+
+    private void ORButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_ORButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_ORButtonActionPerformed
+
+    private void NOTButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_NOTButtonActionPerformed
+        // TODO add your handling code here:
+    }//GEN-LAST:event_NOTButtonActionPerformed
 
     /**
      * @param args the command line arguments
@@ -267,6 +330,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JRadioButton ANDButton;
     private javax.swing.JButton BotonBuscar;
     private javax.swing.JButton BotonSalir;
     private javax.swing.JComboBox<String> ComboBox1;
@@ -274,10 +338,14 @@ public class VentanaPrincipal extends javax.swing.JFrame {
     private javax.swing.JLabel DocumentosEncontradosLabel;
     private javax.swing.JLabel LabelBuscar;
     private javax.swing.JLabel LabelBuscar2;
+    private javax.swing.JRadioButton NOTButton;
+    private javax.swing.JRadioButton ORButton;
     private javax.swing.JTextArea TextAreaResultado;
     private javax.swing.JTextField TextFieldBuscar;
     private javax.swing.JTextField TextFieldBuscar2;
     private javax.swing.JTextField TextFieldDocumentosEncontrados;
+    private javax.swing.ButtonGroup buttonGroup1;
+    private javax.swing.ButtonGroup buttonGroup2;
     private javax.swing.JScrollPane jScrollPane2;
     // End of variables declaration//GEN-END:variables
 }
