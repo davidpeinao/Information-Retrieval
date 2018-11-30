@@ -25,6 +25,9 @@ import org.apache.lucene.document.LongPoint;
 import org.apache.lucene.document.StoredField;
 import org.apache.lucene.document.StringField;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.facet.FacetField;
+import org.apache.lucene.facet.FacetsConfig;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
 import org.apache.lucene.search.similarities.ClassicSimilarity;
@@ -36,7 +39,8 @@ import org.jsoup.nodes.Element;
 public class Indexer {
 
     private IndexWriter writer;
-    boolean create = true;
+    private DirectoryTaxonomyWriter taxoWriter;
+    private FacetsConfig fconfig;
     
     public void configurarIndice(PerFieldAnalyzerWrapper analyzer, Similarity similarity) throws IOException{
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
@@ -44,12 +48,20 @@ public class Indexer {
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
         FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
         //FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+
+        FSDirectory taxoDir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
+        FacetsConfig fconfig = new FacetsConfig();
+        
         writer = new IndexWriter(dir, config);   
+        taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
+
     }
     
     public void closeIndex() throws IOException{
         writer.commit();
         writer.close();
+        taxoWriter.commit();
+        taxoWriter.close();
     }
     
     private void addFile(File file) throws IOException, FileNotFoundException, ParseException {
@@ -133,8 +145,10 @@ public class Indexer {
                     codeString += e.text();
             }
            doc.add(new TextField("code", codeString , Field.Store.YES));
-
-            writer.addDocument(doc);
+           
+           doc.add(new FacetField("id", fields.get(0)));
+           doc.add(new FacetField("isacceptedanswer", fields.get(5)));
+           writer.addDocument(fconfig.build(taxoWriter, doc));
             
         }
         

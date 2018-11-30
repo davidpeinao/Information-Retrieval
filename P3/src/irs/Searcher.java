@@ -1,24 +1,28 @@
 package irs;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.analysis.miscellaneous.PerFieldAnalyzerWrapper;
-import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
+import org.apache.lucene.facet.FacetResult;
+import org.apache.lucene.facet.Facets;
+import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.LabelAndValue;
+import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
+import org.apache.lucene.facet.taxonomy.TaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyReader;
+import org.apache.lucene.facet.taxonomy.directory.DirectoryTaxonomyWriter;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
-import org.apache.lucene.index.Term;
+import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
-import org.apache.lucene.search.TermQuery;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
@@ -26,55 +30,77 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Searcher {
     
-    String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    //String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    
+    //String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    String facetsPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
+
     public String docEncontrados = "";
     
     public String getDocEncontrados(){
         return docEncontrados;
     }
     
-    public String indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, String campo, String line2, String campo2, String operation) throws IOException{
-        IndexReader reader = null;
+    public String indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, 
+           String campo, String line2, String campo2, String operation, String mostrarNDocs) throws IOException, ParseException{
         
+        IndexReader reader = null;
         
         reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
         
-        //QueryParser parser = new QueryParser(campo, analyzerPerField.get(campo));
-        // QUE ANALYZER SE LES HA PASADO A LOS CAMPOS INTRODUCIDOS PARA LA BUSQUEDA?
+        TaxonomyReader taxoReader = new DirectoryTaxonomyReader((DirectoryTaxonomyWriter) Paths.get(facetsPath));
+        
+        QueryParser parser = new QueryParser(campo, analyzerPerField.get(campo));
+        QueryParser parser2 = new QueryParser(campo2, analyzerPerField.get(campo2));
+
         Query query = null, query2 = null;
-        query = new TermQuery(new Term(campo, line));
-        query2 = new TermQuery(new Term(campo2, line2));
+        query = parser.parse(line);
+        
         BooleanClause bc1 = null, bc2 = null;
+        bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
         
-        if(operation.equals("AND")){
-            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
-            bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST);
+        if (line2 != null){
+            query2 = parser2.parse(line2);
+            if(operation.equals("AND")){
+                bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST);
+            }
+
+            if(operation.equals("OR")){
+                bc2 = new BooleanClause(query2, BooleanClause.Occur.SHOULD);
+            }
+
+            if(operation.equals("NOT")){
+                bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST_NOT);
+            }
         }
-        
-        if(operation.equals("OR")){
-            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
-            bc2 = new BooleanClause(query2, BooleanClause.Occur.SHOULD);
-        }
-        
-        if(operation.equals("NOT")){
-            bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
-            bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST_NOT);
-        }
-        
         BooleanQuery.Builder bqbuilder = new BooleanQuery.Builder();
         
         bqbuilder.add(bc1);
-        bqbuilder.add(bc2);
+        if (bc2 != null)
+            bqbuilder.add(bc2);
         
         BooleanQuery bq = bqbuilder.build();
         
-        TopDocs results = searcher.search(bq, 10);
+        int nDocs = Integer.parseInt(mostrarNDocs);
+        FacetsCollector fc = new FacetsCollector();
+        TopDocs results = FacetsCollector.search(searcher, bq, nDocs, fc);
         ScoreDoc[] hits = results.scoreDocs;
-
+        Facets facetas = new FastTaxonomyFacetCounts(taxoReader, fconfig, fc);
+        
+        
+        //
+        String resultadoFacetas = "";
+        List<FacetResult> allDims = facetas.getAllDims(50);
+        resultadoFacetas += ("Categorias totales: " + allDims.size() + "\n");
+        for(FacetResult fr : allDims){
+            resultadoFacetas += ("Categoría" + fr.dim + "\n");
+            for(LabelAndValue lv : fr.labelValues){
+                resultadoFacetas += ("     Etiqueta: " + lv.label + ", valor (#n) --> " + lv.value + "\n");
+            }
+        }
+        //
+        
         String encontrados = "", resultado = "";
         int numTotalHits = (int) results.totalHits;
         encontrados = (numTotalHits + "\n");
@@ -88,8 +114,6 @@ public class Searcher {
             resultado += ("ID: " + id + "\n");
             resultado += ("Cuerpo: " + body + "\n");
             resultado += (doc.getFields() + "\n");
-
-            //System.out.println(resultado);
         }
         reader.close(); 
         return resultado;
