@@ -45,12 +45,13 @@ public class Indexer {
     public void configurarIndice(PerFieldAnalyzerWrapper analyzer, Similarity similarity) throws IOException{
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         config.setSimilarity(similarity);
-        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE);
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
         FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
         //FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
 
         FSDirectory taxoDir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
-        FacetsConfig fconfig = new FacetsConfig();
+        //FSDirectory taxoDir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
+        fconfig = new FacetsConfig();
         
         writer = new IndexWriter(dir, config);   
         taxoWriter = new DirectoryTaxonomyWriter(taxoDir);
@@ -79,12 +80,17 @@ public class Indexer {
             FileReader fReader = new FileReader(file.toString());
             BufferedReader b = new BufferedReader(fReader);
             
-            int i=0;
-            while((cadena = b.readLine())!=null && i<10000) {
-                i++;
-                if (!"\"".equals(cadena) && categories == false){
+            //int i=0;
+            while((cadena = b.readLine())!=null ) {
+                //i++;
+                 
+                if (!"\"".equals(cadena) && categories == false && !"Tags.csv".equals(file.getName())){
                     answer += cadena;
                     continue;
+                }
+                if ("Tags.csv".equals(file.getName()) && !cadena.equals("Id,Tag")){ 
+                    answer += cadena;
+                    
                 }
                 
                 if(categories == false){
@@ -149,7 +155,7 @@ public class Indexer {
            doc.add(new FacetField("id", fields.get(0)));
            doc.add(new FacetField("isacceptedanswer", fields.get(5)));
            writer.addDocument(fconfig.build(taxoWriter, doc));
-            
+ 
         }
         
         if ("Questions.csv".equals(file.getName())){
@@ -190,14 +196,22 @@ public class Indexer {
             writer.addDocument(doc);
         }
         
-        if ("Tags.csv".equals(file.getName())){
-            ArrayList<String> fields = this.getFields(cadena, 1);
+        if ("Tags.csv".equals(file.getName())){       
+            if (cadena != ""){
+            String[] aux = cadena.split(",");
+            ArrayList<String> fields = new ArrayList();
+            fields.add(aux[0]);
+            fields.add(aux[1]);     
+//            ArrayList<String> fields = new ArrayList();
+//            fields.add(cadena.substring(0, cadena.indexOf(",")));
+//            fields.add(cadena.substring(cadena.indexOf(","), cadena.length()-1));
             
             doc.add(new IntPoint("id", Integer.parseInt(fields.get(0))));
             doc.add(new StoredField("id", fields.get(0)));
             doc.add(new TextField("tags", fields.get(1) , Field.Store.YES));
             
             writer.addDocument(doc);
+            }
         }
          
     }
@@ -213,8 +227,11 @@ public class Indexer {
             }else{
                 if(fields.size() != nfields) {
                     j = i;
-                    while (!String.valueOf(cadena.charAt(i)).equals(",")) {
-                        i++;
+                    try{
+                        while (!String.valueOf(cadena.charAt(i)).equals(",")) 
+                            i++;                 
+                    } catch(StringIndexOutOfBoundsException e){
+                    
                     }
                     fields.add(cadena.substring(j, i));
                     i++;

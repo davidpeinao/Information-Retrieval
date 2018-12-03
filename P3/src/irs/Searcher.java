@@ -2,6 +2,7 @@ package irs;
 
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.lucene.analysis.Analyzer;
@@ -9,6 +10,7 @@ import org.apache.lucene.document.Document;
 import org.apache.lucene.facet.FacetResult;
 import org.apache.lucene.facet.Facets;
 import org.apache.lucene.facet.FacetsCollector;
+import org.apache.lucene.facet.FacetsConfig;
 import org.apache.lucene.facet.LabelAndValue;
 import org.apache.lucene.facet.taxonomy.FastTaxonomyFacetCounts;
 import org.apache.lucene.facet.taxonomy.TaxonomyReader;
@@ -30,17 +32,18 @@ import org.apache.lucene.store.FSDirectory;
 
 public class Searcher {
     
-    //String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    String facetsPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
-
+    String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    //String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    //String facetsPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
+    String facetsPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
+    
     public String docEncontrados = "";
     
     public String getDocEncontrados(){
         return docEncontrados;
     }
     
-    public String indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, 
+    public ArrayList<String> indexSearch(Map<String, Analyzer> analyzerPerField, Similarity similarity, String line, 
            String campo, String line2, String campo2, String operation, String mostrarNDocs) throws IOException, ParseException{
         
         IndexReader reader = null;
@@ -49,7 +52,9 @@ public class Searcher {
         IndexSearcher searcher = new IndexSearcher(reader);
         searcher.setSimilarity(similarity);
         
-        TaxonomyReader taxoReader = new DirectoryTaxonomyReader((DirectoryTaxonomyWriter) Paths.get(facetsPath));
+        FSDirectory taxoDir = FSDirectory.open(Paths.get(facetsPath));
+        TaxonomyReader taxoReader = new DirectoryTaxonomyReader(taxoDir);
+        FacetsConfig fconfig = new FacetsConfig();
         
         QueryParser parser = new QueryParser(campo, analyzerPerField.get(campo));
         QueryParser parser2 = new QueryParser(campo2, analyzerPerField.get(campo2));
@@ -94,9 +99,9 @@ public class Searcher {
         List<FacetResult> allDims = facetas.getAllDims(50);
         resultadoFacetas += ("Categorias totales: " + allDims.size() + "\n");
         for(FacetResult fr : allDims){
-            resultadoFacetas += ("Categoría" + fr.dim + "\n");
+            resultadoFacetas += ("Categoría: " + fr.dim + "\n");
             for(LabelAndValue lv : fr.labelValues){
-                resultadoFacetas += ("     Etiqueta: " + lv.label + ", valor (#n) --> " + lv.value + "\n");
+                resultadoFacetas += ("     Etiqueta: " + lv.label + ",  ocurrencias --> " + lv.value + "\n");
             }
         }
         //
@@ -116,7 +121,12 @@ public class Searcher {
             resultado += (doc.getFields() + "\n");
         }
         reader.close(); 
-        return resultado;
+        
+        ArrayList<String> res = new ArrayList();
+        res.add(resultadoFacetas);
+        res.add(resultado);
+        
+        return res;
         }
     
     
