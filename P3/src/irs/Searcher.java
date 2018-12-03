@@ -23,19 +23,21 @@ import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.IndexSearcher;
+import org.apache.lucene.search.MatchAllDocsQuery;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
+import org.apache.lucene.search.TopFieldDocs;
 import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
 
 public class Searcher {
     
-    String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    //String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
-    //String facetsPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
-    String facetsPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
+    //String indexPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    String indexPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index";
+    String facetsPath = "C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
+    //String facetsPath = "E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets";
     
     public String docEncontrados = "";
     
@@ -65,7 +67,7 @@ public class Searcher {
         BooleanClause bc1 = null, bc2 = null;
         bc1 = new BooleanClause(query, BooleanClause.Occur.MUST);
         
-        if (line2 != null){
+        if (!line2.equals("")){
             query2 = parser2.parse(line2);
             if(operation.equals("AND")){
                 bc2 = new BooleanClause(query2, BooleanClause.Occur.MUST);
@@ -89,8 +91,13 @@ public class Searcher {
         
         int nDocs = Integer.parseInt(mostrarNDocs);
         FacetsCollector fc = new FacetsCollector();
-        TopDocs results = FacetsCollector.search(searcher, bq, nDocs, fc);
+        
+//        TopDocs a= searcher.search(bq, 10);
+//        for (int i=0;i<10;i++)
+//            System.out.println(a.totalHits+ " "+a.scoreDocs[i].score);
+        TopDocs results = FacetsCollector.search(searcher,bq, nDocs, fc);
         ScoreDoc[] hits = results.scoreDocs;
+        System.out.println(results.totalHits);
         Facets facetas = new FastTaxonomyFacetCounts(taxoReader, fconfig, fc);
         
         

@@ -46,11 +46,11 @@ public class Indexer {
         IndexWriterConfig config = new IndexWriterConfig(analyzer);
         config.setSimilarity(similarity);
         config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
-        FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
-        //FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        //FSDirectory dir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
+        FSDirectory dir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\index"));
 
-        FSDirectory taxoDir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
-        //FSDirectory taxoDir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
+        //FSDirectory taxoDir = FSDirectory.open(Paths.get("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
+        FSDirectory taxoDir = FSDirectory.open(Paths.get("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\facets"));
         fconfig = new FacetsConfig();
         
         writer = new IndexWriter(dir, config);   
@@ -80,9 +80,9 @@ public class Indexer {
             FileReader fReader = new FileReader(file.toString());
             BufferedReader b = new BufferedReader(fReader);
             
-            //int i=0;
-            while((cadena = b.readLine())!=null ) {
-                //i++;
+            int i=0;
+            while((cadena = b.readLine())!=null && i<10000 ) {
+               i++;
                  
                 if (!"\"".equals(cadena) && categories == false && !"Tags.csv".equals(file.getName())){
                     answer += cadena;
@@ -139,6 +139,10 @@ public class Indexer {
             doc.add(new StoredField("score", fields.get(4)));
 
             doc.add(new StringField("isacceptedanswer", fields.get(5), Field.Store.YES));
+            if (!fields.get(5).equals("TRUE")&& !fields.get(5).equals("FALSE")){
+                System.out.println(fields.get(5));
+                System.exit(0);
+            }
             
             String respuesta = fields.get(6);
             org.jsoup.nodes.Document jsoup = Jsoup.parse(respuesta);
@@ -193,7 +197,9 @@ public class Indexer {
             //doc.add(new TextField("body", fields.get(5) , Field.Store.YES));
             doc.add(new TextField("body", jsoup.body().text() , Field.Store.YES));   
             
-            writer.addDocument(doc);
+            doc.add(new FacetField("id", "question"));
+            doc.add(new FacetField("isacceptedanswer", "-"));
+            writer.addDocument(fconfig.build(taxoWriter, doc));
         }
         
         if ("Tags.csv".equals(file.getName())){       
@@ -271,8 +277,8 @@ public class Indexer {
         
         indice.configurarIndice(analyzer, similarity);
   
-        File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
-        //File f = new File("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        //File f = new File("E:\\Users\\Usuario\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
+        File f = new File("C:\\Users\\David\\Documents\\UGR\\4º\\RI\\P3\\src\\irs\\rquestions");
         indice.addFile(f);
         
         indice.closeIndex();
