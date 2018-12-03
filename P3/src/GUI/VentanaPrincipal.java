@@ -178,7 +178,7 @@ public class VentanaPrincipal extends javax.swing.JFrame {
             }
         });
 
-        jLabel1.setText("jLabel1");
+        jLabel1.setText("Facetas:");
 
         TextAreaFacetas.setColumns(20);
         TextAreaFacetas.setRows(5);
