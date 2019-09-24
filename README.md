@@ -14,3 +14,9 @@ This program uses part of the previous project, it runs analyzers on diferent do
 This system indexes all questions and answers of the programming language R in StackOverfow. Data can be downloaded [here](https://www.kaggle.com/stackoverflow/rquestions). 
 This system implements a GUI that can be used to search questions and answers making use of AND, OR and NOT operations and filtering by facets. 
 Facets have been implemented with problems because the professor didn't expect anyone to get that far in the project, so we spent some hours trying to fix errors and left it the way it is implemented now.
+
+Below there are 2 screenshots showing the final aspect of the search engine
+
+![](screenshot1.PNG)
+
+![](screenshot2.PNG)
